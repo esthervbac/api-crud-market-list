@@ -2,11 +2,11 @@
   "name": "api-crud-market-list",
   "version": "1.0.0",
   "description": "CRUD API to market products list",
-  "main": "index.js",
+  "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon --env-file=.env --exec node --loader ts-node/esm src/server.ts",
     "build": "tsc",
-    "start": "node --env-file=.env dist/server.js",
+    "start": "node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
