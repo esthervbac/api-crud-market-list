@@ -1,31 +1,33 @@
 import type { Request, Response } from "express";
+import mongoose from "mongoose";
+import Shopping from "../models/Shopping.js";
 import { AppError } from "../middlewares/errorHandler.js";
 
-//POST CREATE JSON EXAMPLE
-
-// {
-//   "title": "Compras da semana",
-//   "items": [
-//     { "name": "Arroz", "quantity": 2 },
-//     { "name": "Feijão", "quantity": 1 },
-//     { "name": "Leite", "quantity": 3 }
-//   ]
-// }
-
-let shoppingList: any[] = [];
-let nextId = 1;
-
 export const getItems = async (req: Request, res: Response) => {
-  res.json(shoppingList);
+  const shoppingLists = await Shopping.find();
+
+  if (shoppingLists.length === 0) {
+    throw new AppError("Nenhuma lista encontrada", 404);
+  }
+
+  res.status(200).json({
+    message: "Listas carregadas com sucesso!",
+    data: shoppingLists,
+  });
 };
 
 export const getItemById = async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+  const rawId = req.params.id;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
 
-  const item = shoppingList.find((i) => i.id === id);
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new AppError("Lista não encontrada", 404);
+  }
+
+  const item = await Shopping.findById(id);
 
   if (!item) {
-    throw new AppError("Item não encontrado", 404);
+    throw new AppError("Lista não encontrada", 404);
   }
 
   res.json(item);
@@ -38,64 +40,63 @@ export const createItem = async (req: Request, res: Response) => {
     throw new AppError("Título e itens são obrigatórios", 400);
   }
 
-  const newItem = {
-    id: nextId++,
+  const shopping = await Shopping.create({
     title,
     items,
     purchased: false,
-  };
+  });
 
-  shoppingList.push(newItem);
-
-  res.status(201).json(newItem);
+  res.status(201).json({
+    message: "Lista criada com sucesso!",
+    data: shopping,
+  });
 };
 
 export const updateItem = async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-
-  const item = shoppingList.find((i) => i.id === id);
-
-  if (!item) {
-    throw new AppError("Item não encontrado", 404);
-  }
-
   const { title, purchased, items } = req.body;
+  const rawId = req.params.id;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
 
-  // Atualiza campos simples sem sobrescrever tudo
-  item.title = title ?? item.title;
-  item.purchased = purchased ?? item.purchased;
-
-  // 👇 Merge inteligente dos itens (não apaga os antigos)
-  if (items && Array.isArray(items)) {
-    items.forEach((newItem) => {
-      const existingItem = item.items.find(
-        (i: { name: string }) => i.name === newItem.name,
-      );
-
-      // Se já existe, atualiza quantidade
-      if (existingItem) {
-        existingItem.quantity = newItem.quantity ?? existingItem.quantity;
-      }
-      // Se não existe, adiciona
-      else {
-        item.items.push(newItem);
-      }
-    });
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new AppError("Lista não encontrada para atualização", 404);
   }
 
-  res.json(item);
+  const shopping = await Shopping.findById(req.params.id);
+
+  if (!shopping) {
+    throw new AppError("Lista não encontrada", 404);
+  }
+
+  shopping.title = title ?? shopping.title;
+  shopping.purchased = purchased ?? shopping.purchased;
+
+  if (items && Array.isArray(items)) {
+    shopping.set("items", items as any);
+  }
+
+  await shopping.save();
+
+  res.json({
+    message: "Lista atualizada com sucesso!",
+    data: shopping,
+  });
 };
 
 export const deleteItem = async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+  const rawId = req.params.id;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
 
-  const exists = shoppingList.some((i) => i.id === id);
-
-  if (!exists) {
-    throw new AppError("Item não encontrado", 404);
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    throw new AppError("Lista não encontrada para ser deletada", 404);
   }
 
-  shoppingList = shoppingList.filter((i) => i.id !== id);
+  const deleted = await Shopping.findByIdAndDelete(req.params.id);
 
-  res.status(204).send();
+  if (!deleted) {
+    throw new AppError("Lista não encontrada", 404);
+  }
+
+  res.status(200).json({
+    message: "Item deletado com sucesso!",
+  });
 };

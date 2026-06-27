@@ -12,7 +12,6 @@ app.get("/", (req, res) => {
 
 app.use("/shopping-list", shoppingRoutes);
 
-// 👇 sempre por último
 app.use(errorHandler);
 
 export default app;
