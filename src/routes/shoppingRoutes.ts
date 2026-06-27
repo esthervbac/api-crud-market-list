@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 import {
   getItems,
@@ -11,10 +12,10 @@ import {
 
 const router = Router();
 
-router.get("/", asyncHandler(getItems));
-router.get("/:id", asyncHandler(getItemById));
-router.post("/", asyncHandler(createItem));
-router.put("/:id", asyncHandler(updateItem));
-router.delete("/:id", asyncHandler(deleteItem));
+router.get("/", authMiddleware, asyncHandler(getItems));
+router.get("/:id", authMiddleware, asyncHandler(getItemById));
+router.post("/", authMiddleware, asyncHandler(createItem));
+router.put("/:id", authMiddleware, asyncHandler(updateItem));
+router.delete("/:id", authMiddleware, asyncHandler(deleteItem));
 
 export default router;
