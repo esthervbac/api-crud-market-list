@@ -36,8 +36,8 @@ export const getItemById = async (req: Request, res: Response) => {
 export const createItem = async (req: Request, res: Response) => {
   const { title, items } = req.body;
 
-  if (!title || !items?.length) {
-    throw new AppError("Título e itens são obrigatórios", 400);
+  if (!title || !Array.isArray(items)) {
+    throw new AppError("Título é obrigatório e itens deve ser um array", 400);
   }
 
   const shopping = await Shopping.create({
