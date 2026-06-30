@@ -2,8 +2,10 @@ import express from "express";
 import shoppingRoutes from "./routes/shoppingRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
+import cors from "cors";
 
 const app = express();
+app.use(cors());
 
 app.use(express.json());
 
