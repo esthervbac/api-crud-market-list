@@ -69,3 +69,4 @@ This API allows users to create, read, update, and delete shopping lists. All da
 ```bash
     Servidor iniciado na porta 3030
 ```
+
